@@ -1,42 +1,12 @@
 const store = (initVal) => {
-  const store = Redux.createStore((state = initVal, action) => {
-    if (action.type === "update") return action.value;
-    return state;
-  });
+  const store = mobx.observable.box(initVal, { deep: false });
   return (...args) => {
-    if (args.length === 0) {
-      if (CurrentComponentSubs !== null) CurrentComponentSubs.add(store);
-      return store.getState();
-    }
-    store.dispatch({ type: "update", value: args[0] });
+    if (args.length === 0) return store.get();
+    store.set(args[0]);
   };
 };
 
-let CurrentComponentSubs = null;
-const component = (Component) => {
-  return (props) => {
-    const { current: subs } = React.useRef(new Map());
-    const prevCompSubs = CurrentComponentSubs;
-    CurrentComponentSubs = new Set();
-    const [_, update] = React.useState();
-    const render = Component(props);
-    CurrentComponentSubs.forEach((store) => {
-      if (!subs.has(store))
-        subs.set(
-          store,
-          store.subscribe(() => update({}))
-        );
-    });
-    subs.forEach((unsub, store) => {
-      if (!CurrentComponentSubs.has(store)) {
-        subs.delete(store);
-        unsub();
-      }
-    });
-    CurrentComponentSubs = prevCompSubs;
-    return render;
-  };
-};
+const component = mobxReactLite.observer;
 
 const AppState = {
   theme: store("dark"),
