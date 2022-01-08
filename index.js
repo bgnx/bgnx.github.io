@@ -28,7 +28,10 @@ const component = (Component) => {
         );
     });
     subs.forEach((unsub, store) => {
-      if (!CurrentComponentSubs.has(store)) unsub();
+      if (!CurrentComponentSubs.has(store)) {
+        subs.delete(store);
+        unsub();
+      }
     });
     CurrentComponentSubs = prevCompSubs;
     return render;
